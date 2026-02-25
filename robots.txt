@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sizning-saytingiz.uz/sitemap.xml
