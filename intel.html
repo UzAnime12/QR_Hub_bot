@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>QR Skaner | Mukammal dizayn</title>
+    <!-- jsQR kutubxonasi -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 48px;
+            box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            padding: 32px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a5f3fc 0%, #bae6fd 50%, #c7d2fe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            font-weight: 400;
+        }
+
+        .tab-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 32px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 8px;
+            border-radius: 100px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .tab-btn {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 100px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 0.3px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-btn.active {
+            background: rgba(255, 255, 255, 0.95);
+            color: #0f172a;
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeScale 0.4s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeScale {
+            from {
+                opacity: 0;
+                transform: scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .camera-section, .upload-section {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 32px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 40px -15px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        video, canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: #000;
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #38bdf8, #818cf8, #38bdf8, transparent);
+            animation: scan 2s linear infinite;
+            opacity: 0.7;
+            box-shadow: 0 0 15px #38bdf8;
+        }
+
+        @keyframes scan {
+            0% { top: 0; }
+            50% { top: calc(100% - 4px); }
+            100% { top: 0; }
+        }
+
+        .upload-area {
+            padding: 40px 20px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 28px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3));
+        }
+
+        .upload-label {
+            display: inline-block;
+            padding: 14px 36px;
+            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+            color: white;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 15px 25px -8px #38bdf880;
+            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 1.1rem;
+        }
+
+        .upload-label:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 25px 30px -8px #38bdf8;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .result-card {
+            margin-top: 32px;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 24px;
+            border-left: 6px solid #38bdf8;
+            text-align: left;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-left-width: 6px;
+            transition: all 0.3s;
+        }
+
+        .result-label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-text {
+            font-size: 1.3rem;
+            color: white;
+            word-break: break-all;
+            font-weight: 500;
+            line-height: 1.6;
+            background: rgba(255,255,255,0.02);
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .error-message {
+            color: #f87171;
+            margin-top: 20px;
+            padding: 12px;
+            background: rgba(248, 113, 113, 0.1);
+            border-radius: 16px;
+            border-left: 4px solid #f87171;
+            font-size: 0.95rem;
+        }
+
+        .footer {
+            margin-top: 40px;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+        }
+
+        .footer a {
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer a:hover {
+            color: #38bdf8;
+        }
+
+        /* Mobil moslashuv */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                border-radius: 32px;
+            }
+            h1 {
+                font-size: 2.2rem;
+            }
+            .tab-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>QR SKANER</h1>
+        <p class="subtitle">Kamera orqali yoki galereyadan skanerlang</p>
+
+        <!-- Tab tugmalari -->
+        <div class="tab-buttons">
+            <button class="tab-btn active" id="cameraTab">📸 Kamera</button>
+            <button class="tab-btn" id="uploadTab">🖼️ Galereya</button>
+        </div>
+
+        <!-- Kamera tabi -->
+        <div class="tab-content active" id="cameraContent">
+            <div class="camera-section">
+                <div class="video-wrapper">
+                    <video id="video" playsinline></video>
+                    <div class="scan-line"></div>
+                </div>
+                <canvas id="canvas" style="display:none;"></canvas>
+                <p style="margin-top:20px; color:rgba(255,255,255,0.5);">QR kodni kadrga oling</p>
+            </div>
+        </div>
+
+        <!-- Galereya tabi -->
+        <div class="tab-content" id="uploadContent">
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <p style="color:rgba(255,255,255,0.7); margin-bottom:20px;">Rasmni ushbu yerga tashlang yoki</p>
+                    <label for="fileInput" class="upload-label">Rasm tanlang</label>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+            </div>
+        </div>
+
+        <!-- Natija kartasi (dastlab yashirin) -->
+        <div class="result-card" id="resultCard" style="display: none;">
+            <div class="result-label">
+                <span>🔍 SKANER NATIJASI</span>
+            </div>
+            <div class="result-text" id="resultText"></div>
+        </div>
+        
+        <!-- Xato xabari -->
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+        <div class="footer">
+            <span>⚡ by QR Ecosystem</span>
+            <a href="https://t.me/sizning_botingiz" target="_blank">🤖 Bot</a>
+        </div>
+    </div>
+
+    <script>
+        // Elementlar
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const resultCard = document.getElementById('resultCard');
+        const resultText = document.getElementById('resultText');
+        const errorMsg = document.getElementById('errorMessage');
+        const cameraTab = document.getElementById('cameraTab');
+        const uploadTab = document.getElementById('uploadTab');
+        const cameraContent = document.getElementById('cameraContent');
+        const uploadContent = document.getElementById('uploadContent');
+
+        let scanning = true;
+        let videoStream = null;
+        let animationFrame = null;
+
+        // Tab almashish
+        cameraTab.addEventListener('click', () => {
+            cameraTab.classList.add('active');
+            uploadTab.classList.remove('active');
+            cameraContent.classList.add('active');
+            uploadContent.classList.remove('active');
+            stopCamera();
+            startCamera();
+            hideResult();
+        });
+
+        uploadTab.addEventListener('click', () => {
+            uploadTab.classList.add('active');
+            cameraTab.classList.remove('active');
+            uploadContent.classList.add('active');
+            cameraContent.classList.remove('active');
+            stopCamera();
+            hideResult();
+        });
+
+        // Kamerani boshlash
+        async function startCamera() {
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+                video.srcObject = videoStream;
+                video.setAttribute('playsinline', true);
+                video.play();
+                scanFrame();
+            } catch (err) {
+                showError("Kamerani ishga tushirishda xatolik: " + err.message);
+            }
+        }
+
+        // Kamerani to'xtatish
+        function stopCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+                animationFrame = null;
+            }
+        }
+
+        // Har bir kadrni skanerlash
+        function scanFrame() {
+            if (!cameraContent.classList.contains('active')) return;
+            
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, canvas.width, canvas.height, {
+                    inversionAttempts: 'dontInvert',
+                });
+                
+                if (code) {
+                    showResult(code.data);
+                    // Ixtiyoriy: topgach to'xtatish
+                    // stopCamera();
+                }
+            }
+            animationFrame = requestAnimationFrame(scanFrame);
+        }
+
+        // Natijani ko'rsatish
+        function showResult(text) {
+            resultText.innerText = text;
+            resultCard.style.display = 'block';
+            errorMsg.style.display = 'none';
+            
+            // Qisqa vibratsiya (agar mobil bo'lsa)
+            if (navigator.vibrate) navigator.vibrate(50);
+        }
+
+        // Natijani yashirish
+        function hideResult() {
+            resultCard.style.display = 'none';
+        }
+
+        // Xatoni ko'rsatish
+        function showError(message) {
+            errorMsg.innerText = message;
+            errorMsg.style.display = 'block';
+            resultCard.style.display = 'none';
+        }
+
+        // Yuklangan rasmni skanerlash
+        fileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, canvas.width, canvas.height, {
+                        inversionAttempts: 'dontInvert',
+                    });
+                    
+                    if (code) {
+                        showResult(code.data);
+                    } else {
+                        showError("QR kod topilmadi. Boshqa rasmni sinab ko'ring.");
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            
+            // Tozalash
+            fileInput.value = '';
+        });
+
+        // Drag & drop uchun
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#38bdf8';
+            uploadArea.style.background = 'rgba(56, 189, 248, 0.1)';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = 'rgba(255,255,255,0.2)';
+            uploadArea.style.background = 'transparent';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'rgba(255,255,255,0.2)';
+            uploadArea.style.background = 'transparent';
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                        
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const code = jsQR(imageData.data, canvas.width, canvas.height, {
+                            inversionAttempts: 'dontInvert',
+                        });
+                        
+                        if (code) {
+                            showResult(code.data);
+                        } else {
+                            showError("QR kod topilmadi.");
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                showError("Iltimos, rasm faylini tashlang.");
+            }
+        });
+
+        // Sahna yuklanganda kamerani boshlash
+        window.addEventListener('load', () => {
+            startCamera();
+        });
+
+        // Sahna yopilganda kamerani to'xtatish
+        window.addEventListener('beforeunload', () => {
+            stopCamera();
+        });
+    </script>
+</body>
+</html>
